@@ -1,0 +1,42 @@
+hosts:
+  - name: nuc-01
+    ip: 192.168.1.10
+    role: docker-host
+    os: Ubuntu 24.04 LTS
+    services:
+      - name: docker
+        port: 2375
+        protocol: tcp
+      - name: ssh
+        port: 22
+        protocol: tcp
+      - name: node-exporter
+        port: 9100
+        protocol: http
+
+  - name: nas-01
+    ip: 192.168.1.20
+    role: storage
+    os: TrueNAS SCALE 24.04
+    services:
+      - name: smb
+        port: 445
+        protocol: tcp
+      - name: nfs
+        port: 2049
+        protocol: tcp
+      - name: truenas-web
+        port: 443
+        protocol: https
+
+  - name: pihole-01
+    ip: 192.168.1.2
+    role: dns
+    os: Raspberry Pi OS
+    services:
+      - name: dns
+        port: 53
+        protocol: udp
+      - name: pihole-web
+        port: 80
+        protocol: http

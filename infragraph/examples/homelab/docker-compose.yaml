@@ -1,0 +1,122 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - jellyfin
+      - gitea
+      - homeassistant
+    networks:
+      - frontend
+      - backend
+    restart: unless-stopped
+    labels:
+      role: reverse-proxy
+
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    ports:
+      - "127.0.0.1:8096:8096"
+    volumes:
+      - jellyfin_config:/config
+      - /mnt/media:/media:ro
+    networks:
+      - backend
+    restart: unless-stopped
+
+  gitea:
+    image: gitea/gitea:1.21
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "2222:22"
+    depends_on:
+      - postgres
+    volumes:
+      - gitea_data:/data
+    networks:
+      - backend
+    environment:
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=gitea
+    restart: unless-stopped
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    ports:
+      - "8123:8123"
+    volumes:
+      - ha_config:/config
+    networks:
+      - backend
+      - iot
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: gitea
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: changeme
+    networks:
+      - backend
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto_data:/mosquitto/data
+    networks:
+      - iot
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.2
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+      - monitoring
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.48
+    volumes:
+      - prom_data:/prometheus
+    networks:
+      - monitoring
+      - backend
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 4 * * *
+    restart: unless-stopped
+
+volumes:
+  jellyfin_config:
+  gitea_data:
+  ha_config:
+  pg_data:
+  mosquitto_data:
+  prom_data:
+
+networks:
+  frontend:
+  backend:
+  iot:
+  monitoring:

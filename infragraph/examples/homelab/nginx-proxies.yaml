@@ -1,0 +1,42 @@
+proxies:
+  - server_name: jellyfin.home.lab
+    listen: 443
+    ssl: true
+    locations:
+      - path: /
+        proxy_pass: http://jellyfin:8096
+
+  - server_name: git.home.lab
+    listen: 443
+    ssl: true
+    locations:
+      - path: /
+        proxy_pass: http://gitea:3000
+
+  - server_name: ha.home.lab
+    listen: 443
+    ssl: true
+    locations:
+      - path: /
+        proxy_pass: http://homeassistant:8123
+
+  - server_name: grafana.home.lab
+    listen: 443
+    ssl: true
+    locations:
+      - path: /
+        proxy_pass: http://grafana:3000
+
+  - server_name: prom.home.lab
+    listen: 443
+    ssl: true
+    locations:
+      - path: /
+        proxy_pass: http://prometheus:9090
+
+  - server_name: legacy.home.lab
+    listen: 443
+    ssl: true
+    locations:
+      - path: /
+        proxy_pass: http://old-app:5000
